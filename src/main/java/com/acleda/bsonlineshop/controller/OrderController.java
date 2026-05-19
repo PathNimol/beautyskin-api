@@ -1,0 +1,63 @@
+package com.acleda.bsonlineshop.controller;
+
+import com.acleda.bsonlineshop.dto.common.ApiResponse;
+import com.acleda.bsonlineshop.dto.common.PageResponse;
+import com.acleda.bsonlineshop.dto.order.BulkOrderStatusRequest;
+import com.acleda.bsonlineshop.dto.order.OrderResponse;
+import com.acleda.bsonlineshop.dto.order.PlaceOrderRequest;
+import com.acleda.bsonlineshop.enums.OrderStatus;
+import com.acleda.bsonlineshop.service.OrderService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.validation.Valid;
+import java.util.Map;
+import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/orders")
+@RequiredArgsConstructor
+@SecurityRequirement(name = "bearerAuth")
+public class OrderController {
+
+    private final OrderService orderService;
+
+    @GetMapping
+    public ApiResponse<PageResponse<OrderResponse>> list(
+            @RequestParam(required = false) UUID shopId,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String search,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int limit) {
+        return ApiResponse.success(orderService.list(shopId, status, search, page, limit));
+    }
+
+    @GetMapping("/{id}")
+    public ApiResponse<OrderResponse> get(@PathVariable UUID id) {
+        return ApiResponse.success(orderService.getById(id));
+    }
+
+    @PostMapping
+    public ApiResponse<OrderResponse> place(@Valid @RequestBody PlaceOrderRequest request) {
+        return ApiResponse.success("Order placed", orderService.placeOrder(request));
+    }
+
+    @PatchMapping("/{id}/status")
+    public ApiResponse<OrderResponse> updateStatus(@PathVariable UUID id, @RequestBody Map<String, String> body) {
+        OrderStatus status = OrderStatus.valueOf(body.get("status").toUpperCase());
+        return ApiResponse.success(orderService.updateStatus(id, status));
+    }
+
+    @PatchMapping("/bulk")
+    public ApiResponse<Void> bulk(@Valid @RequestBody BulkOrderStatusRequest request) {
+        orderService.bulkUpdateStatus(request);
+        return ApiResponse.success("Orders updated", null);
+    }
+}
