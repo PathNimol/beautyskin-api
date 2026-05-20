@@ -4,18 +4,18 @@ services:
     container_name: beautyskin-postgres
     restart: unless-stopped
     ports:
-      - "${POSTGRES_PORT:-5434}:5432"
+      - "${DB_PORT:-5432}:5432"
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-beautyskin}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-beautyskin}
-      POSTGRES_DB: ${POSTGRES_DB:-beautyskin}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-151003}
+      POSTGRES_DB: ${DB_NAME:-beautyskin-db}
     volumes:
       - beautyskin_postgres_data:/var/lib/postgresql/data
     healthcheck:
       test:
         [
           "CMD-SHELL",
-          "pg_isready -U ${POSTGRES_USER:-beautyskin} -d ${POSTGRES_DB:-beautyskin}",
+          "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-beautyskin-db}",
         ]
       interval: 5s
       timeout: 5s

@@ -1,0 +1,15 @@
+# Production-oriented defaults — activate with: spring.profiles.active=prod
+
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+app:
+  auth:
+    registration:
+      require-delivered-email: true
+  otp:
+    demo-code: ""
+  oauth:
+    demo-stub-enabled: false
