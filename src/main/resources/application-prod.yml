@@ -13,3 +13,8 @@ app:
     demo-code: ""
   oauth:
     demo-stub-enabled: false
+  upload:
+    # In prod set: BASE_URL=https://your-api-domain.com
+    base-url: ${BASE_URL:http://localhost:8080}
+  # In prod set: CORS_ORIGINS=https://your-frontend-domain.com
+  # Never include localhost:8080 in prod CORS_ORIGINS

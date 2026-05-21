@@ -2,7 +2,9 @@ package com.acleda.bsonlineshop.config;
 
 import com.acleda.bsonlineshop.security.JwtAuthenticationFilter;
 import com.acleda.bsonlineshop.security.oauth2.OAuth2SuccessHandler;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -20,6 +22,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity
@@ -31,6 +36,9 @@ public class SecurityConfig {
     private final UserDetailsService userDetailsService;
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
 
+    @Value("${app.cors.allowed-origins:http://localhost:4028,http://127.0.0.1:4028}")
+    private String allowedOrigins;
+
     private static final String[] PUBLIC = {
             "/api/auth/**",
             "/api/catalog/**",
@@ -39,19 +47,22 @@ public class SecurityConfig {
             "/swagger-ui.html",
             "/webjars/**",
             "/login/oauth2/**",
-            "/oauth2/**"
+            "/oauth2/**",
+            // Uploaded avatar images are publicly readable (no auth to view)
+            "/uploads/**"
     };
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                .cors(cors -> {})
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/logout-all").authenticated()
                         .requestMatchers(PUBLIC).permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
+                        .requestMatchers("/api/upload/**").authenticated()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .oauth2Login(oauth2 -> oauth2
@@ -59,6 +70,23 @@ public class SecurityConfig {
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        // CORS origins come entirely from config — never hardcode origins here.
+        // Dev:  app.cors.allowed-origins=http://localhost:4028,http://localhost:8080
+        // Prod: set CORS_ORIGINS env var to your real frontend domain only
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(List.of(allowedOrigins.split(",")));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setAllowCredentials(true);
+        config.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
     }
 
     @Bean

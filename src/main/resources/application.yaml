@@ -1,6 +1,7 @@
 spring:
   application:
     name: beautyskin-api
+
   flyway:
     enabled: true
     baseline-on-migrate: true
@@ -24,16 +25,24 @@ spring:
     serialization:
       write-dates-as-timestamps: false
 
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 2MB
+      max-request-size: 2MB
+
   mail:
+    host: smtp.gmail.com
+    port: 587
+    username: pathnimol0425@gmail.com
+    password: kvwn xqaf nslf uqyt   # the 16-char app password
     properties:
       mail:
         smtp:
           auth: true
           starttls:
             enable: true
-          connectiontimeout: 10000
-          timeout: 10000
-          writetimeout: 10000
+
 
   security:
     oauth2:
@@ -64,7 +73,7 @@ app:
       # prod profile sets true — registration rolls back unless SMTP sends the OTP
       require-delivered-email: false
   cors:
-    allowed-origins: ${CORS_ORIGINS:http://localhost:4028,http://127.0.0.1:4028}
+    allowed-origins: ${CORS_ORIGINS:http://localhost:4028,http://127.0.0.1:4028,http://localhost:8080}
   jwt:
     secret: ${JWT_SECRET:bs-online-shop-jwt-secret-key-change-in-production-min-256-bits-long!!}
     access-expiration-ms: ${JWT_ACCESS_MS:3600000}
@@ -76,7 +85,7 @@ app:
   # OTP emails: set SPRING_MAIL_HOST, SPRING_MAIL_USERNAME, SPRING_MAIL_PASSWORD (and optionally SPRING_MAIL_PORT).
   # When host is unset, OTP is stored only (no email); demo-code still works in dev.
   mail:
-    from: ${APP_MAIL_FROM:}
+    from: pathnimol0425@gmail.com
 
   oauth:
     demo-stub-enabled: ${APP_OAUTH_DEMO_STUB_ENABLED:true}
@@ -84,8 +93,12 @@ app:
   oauth2:
     frontend-redirect-url: ${FRONTEND_REDIRECT_URL:http://localhost:4028/oauth2/callback}
 
-logging:
-  level:
-    root: INFO
-    com.acleda.bsonlineshop: DEBUG
-    org.springframework.security: INFO
+  upload:
+    dir: ${UPLOAD_DIR:uploads}
+    base-url: ${BASE_URL:http://localhost:8080}
+#
+#logging:
+#  level:
+#    root: INFO
+#    com.acleda.bsonlineshop: DEBUG
+#    org.springframework.security: INFO

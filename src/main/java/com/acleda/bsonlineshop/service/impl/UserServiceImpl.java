@@ -35,6 +35,7 @@ public class UserServiceImpl implements UserService {
         if (request.getLastName() != null) user.setLastName(request.getLastName());
         if (request.getPhone() != null) user.setPhone(request.getPhone());
         if (request.getAvatar() != null) user.setAvatar(request.getAvatar());
+        System.out.println("AVATAR: "  + user.getAvatar());
         if (request.getAvatarAlt() != null) user.setAvatarAlt(request.getAvatarAlt());
         if (request.getShipping() != null) {
             user.setShipping(entityMapper.toShippingEntity(request.getShipping()));
