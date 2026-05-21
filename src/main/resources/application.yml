@@ -55,6 +55,8 @@ springdoc:
     operations-sorter: method
     tags-sorter: alpha
     disable-swagger-default-url: true
+    # Keep Authorize token in browser localStorage after refresh / close tab
+    persist-authorization: true
 
 app:
   auth:

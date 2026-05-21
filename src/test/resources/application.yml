@@ -26,6 +26,9 @@ server:
   port: 0
 
 app:
+  seed:
+    catalog-sql:
+      enabled: false
   cors:
     allowed-origins: http://localhost:4028
   jwt:

@@ -64,4 +64,10 @@ public class CartController {
     public ApiResponse<CartResponse> promo(@RequestBody Map<String, String> body) {
         return ApiResponse.success(cartService.applyPromo(body.get("code")));
     }
+
+    @Operation(summary = "Remove promo code", description = "Clear the applied promotion from the cart without removing items.")
+    @DeleteMapping("/promo")
+    public ApiResponse<CartResponse> removePromo() {
+        return ApiResponse.success(cartService.removePromo());
+    }
 }

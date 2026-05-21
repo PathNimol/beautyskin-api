@@ -3,7 +3,7 @@ package com.acleda.bsonlineshop.service.impl;
 import com.acleda.bsonlineshop.dto.common.ListRequest;
 import com.acleda.bsonlineshop.dto.common.PageAbleResponse;
 import com.acleda.bsonlineshop.dto.common.PageResponse;
-import com.acleda.bsonlineshop.dto.common.Result;
+import com.acleda.bsonlineshop.dto.common.PageAbleResponse;
 import com.acleda.bsonlineshop.dto.product.ProductCreateRequest;
 import com.acleda.bsonlineshop.dto.product.ProductResponse;
 import com.acleda.bsonlineshop.entity.Product;
@@ -41,18 +41,34 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional(readOnly = true)
-    public Result<Object> listCatalog(ListRequest request) {
+    public PageAbleResponse<ProductResponse> listCatalog(ListRequest request) {
         Sort sort = Sort.by(
                 Sort.Direction.fromString(request.getSortDirection()),
                 request.getSortProperty()
         );
         Pageable pageable = PageRequest.of(request.getPageNumber(), request.getSize(), sort);
         Specification<Product> spec = CoreBase.filter(request, Product.class);
+        spec = spec.and(catalogVisibilitySpec(request));
         Page<Product> products = productRepository.findAll(spec, pageable);
         List<ProductResponse> responses = products.stream()
                 .map(productMapper::toResponse)
                 .toList();
-        return Result.of(new PageAbleResponse<>(responses, products));
+        return new PageAbleResponse<>(responses, products);
+    }
+
+    private static Specification<Product> catalogVisibilitySpec(ListRequest request) {
+        return (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            predicates.add(cb.isTrue(root.get("visible")));
+            predicates.add(cb.isFalse(root.get("revoked")));
+            if (request.getMinPrice() != null) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get("price"), request.getMinPrice()));
+            }
+            if (request.getMaxPrice() != null) {
+                predicates.add(cb.lessThanOrEqualTo(root.get("price"), request.getMaxPrice()));
+            }
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
     }
 
     @Override

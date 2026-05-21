@@ -16,13 +16,32 @@ public interface ShopStaffRepository extends JpaRepository<ShopStaff, UUID> {
             SELECT s FROM ShopStaff s WHERE s.deleted = false AND s.shop.id = :shopId
             AND (:role IS NULL OR s.role = :role)
             AND (:status IS NULL OR s.status = :status)
-            AND (:search IS NULL OR LOWER(s.name) LIKE LOWER(CONCAT('%', :search, '%'))
+            """)
+    Page<ShopStaff> list(
+            @Param("shopId") UUID shopId,
+            @Param("role") ShopUserRole role,
+            @Param("status") AccountStatus status,
+            Pageable pageable);
+
+    @Query("""
+            SELECT s FROM ShopStaff s WHERE s.deleted = false AND s.shop.id = :shopId
+            AND (:role IS NULL OR s.role = :role)
+            AND (:status IS NULL OR s.status = :status)
+            AND (LOWER(s.name) LIKE LOWER(CONCAT('%', :search, '%'))
                  OR LOWER(s.email) LIKE LOWER(CONCAT('%', :search, '%')))
             """)
-    Page<ShopStaff> search(
+    Page<ShopStaff> searchWithTerm(
             @Param("shopId") UUID shopId,
             @Param("role") ShopUserRole role,
             @Param("status") AccountStatus status,
             @Param("search") String search,
             Pageable pageable);
+
+    default Page<ShopStaff> search(
+            UUID shopId, ShopUserRole role, AccountStatus status, String search, Pageable pageable) {
+        if (search == null || search.isBlank()) {
+            return list(shopId, role, status, pageable);
+        }
+        return searchWithTerm(shopId, role, status, search.trim(), pageable);
+    }
 }

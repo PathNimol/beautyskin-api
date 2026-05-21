@@ -17,12 +17,28 @@ public interface InventoryItemRepository extends JpaRepository<InventoryItem, UU
             SELECT i FROM InventoryItem i WHERE i.deleted = false
             AND i.shop.id = :shopId
             AND (:status IS NULL OR i.invStatus = :status)
-            AND (:search IS NULL OR LOWER(i.productName) LIKE LOWER(CONCAT('%', :search, '%'))
+            """)
+    Page<InventoryItem> list(
+            @Param("shopId") UUID shopId, @Param("status") InventoryStatus status, Pageable pageable);
+
+    @Query("""
+            SELECT i FROM InventoryItem i WHERE i.deleted = false
+            AND i.shop.id = :shopId
+            AND (:status IS NULL OR i.invStatus = :status)
+            AND (LOWER(i.productName) LIKE LOWER(CONCAT('%', :search, '%'))
                  OR LOWER(i.sku) LIKE LOWER(CONCAT('%', :search, '%')))
             """)
-    Page<InventoryItem> search(
+    Page<InventoryItem> searchWithTerm(
             @Param("shopId") UUID shopId,
             @Param("status") InventoryStatus status,
             @Param("search") String search,
             Pageable pageable);
+
+    default Page<InventoryItem> search(
+            UUID shopId, InventoryStatus status, String search, Pageable pageable) {
+        if (search == null || search.isBlank()) {
+            return list(shopId, status, pageable);
+        }
+        return searchWithTerm(shopId, status, search.trim(), pageable);
+    }
 }

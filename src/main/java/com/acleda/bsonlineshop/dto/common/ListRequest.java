@@ -14,4 +14,6 @@ public class ListRequest {
     private String sortDirection = "DESC";
     private String search;
     private Map<String, String> filters; // dynamic filters e.g. category, status
+    private java.math.BigDecimal minPrice;
+    private java.math.BigDecimal maxPrice;
 }

@@ -5,6 +5,7 @@ import com.acleda.bsonlineshop.dto.common.PageResponse;
 import com.acleda.bsonlineshop.dto.order.BulkOrderStatusRequest;
 import com.acleda.bsonlineshop.dto.order.OrderResponse;
 import com.acleda.bsonlineshop.dto.order.PlaceOrderRequest;
+import com.acleda.bsonlineshop.dto.order.PlaceOrderResult;
 import com.acleda.bsonlineshop.enums.OrderStatus;
 import com.acleda.bsonlineshop.service.OrderService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -31,7 +32,11 @@ public class OrderController {
 
     private final OrderService orderService;
 
-    @Operation(summary = "List orders", description = "Paginated orders for the caller's scope. Merchants pass shopId; filters by status and search.")
+    @Operation(
+            summary = "List orders",
+            description =
+                    "Paginated orders scoped by role: CUSTOMER sees own orders (shopId ignored); "
+                            + "OWNER/STAFF use their shopId (or omit to default to assigned shop); ADMIN may filter by shopId or omit for all shops.")
     @GetMapping
     public ApiResponse<PageResponse<OrderResponse>> list(
             @RequestParam(required = false) UUID shopId,
@@ -48,10 +53,15 @@ public class OrderController {
         return ApiResponse.success(orderService.getById(id));
     }
 
-    @Operation(summary = "Place order", description = "Create an order from the current cart and shipping details (PlaceOrderRequest).")
+    @Operation(
+            summary = "Place order",
+            description =
+                    "Create one order per shop currently represented in the cart (multi-vendor checkout). "
+                            + "Cart promo discount is split across shops by subtotal share. "
+                            + "Validates stock and product eligibility, decrements stock, increments promotion usedCount when a code is applied, then clears the cart.")
     @PostMapping
     @PreAuthorize("@authz.storeOrderActor()")
-    public ApiResponse<OrderResponse> place(@Valid @RequestBody PlaceOrderRequest request) {
+    public ApiResponse<PlaceOrderResult> place(@Valid @RequestBody PlaceOrderRequest request) {
         return ApiResponse.success("Order placed", orderService.placeOrder(request));
     }
 

@@ -13,11 +13,27 @@ import org.springframework.data.repository.query.Param;
 public interface ShopRepository extends JpaRepository<Shop, UUID> {
     Optional<Shop> findByIdAndDeletedFalse(UUID id);
 
+    Optional<Shop> findBySlugAndDeletedFalse(String slug);
+
     @Query("""
             SELECT s FROM Shop s WHERE s.deleted = false
             AND (:status IS NULL OR s.status = :status)
-            AND (:search IS NULL OR LOWER(s.name) LIKE LOWER(CONCAT('%', :search, '%'))
+            """)
+    Page<Shop> list(@Param("status") ShopStatus status, Pageable pageable);
+
+    @Query("""
+            SELECT s FROM Shop s WHERE s.deleted = false
+            AND (:status IS NULL OR s.status = :status)
+            AND (LOWER(s.name) LIKE LOWER(CONCAT('%', :search, '%'))
                  OR LOWER(s.ownerName) LIKE LOWER(CONCAT('%', :search, '%')))
             """)
-    Page<Shop> search(@Param("status") ShopStatus status, @Param("search") String search, Pageable pageable);
+    Page<Shop> searchWithTerm(
+            @Param("status") ShopStatus status, @Param("search") String search, Pageable pageable);
+
+    default Page<Shop> search(ShopStatus status, String search, Pageable pageable) {
+        if (search == null || search.isBlank()) {
+            return list(status, pageable);
+        }
+        return searchWithTerm(status, search.trim(), pageable);
+    }
 }

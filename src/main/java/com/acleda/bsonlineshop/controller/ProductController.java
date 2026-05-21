@@ -3,7 +3,7 @@ package com.acleda.bsonlineshop.controller;
 import com.acleda.bsonlineshop.dto.common.ApiResponse;
 import com.acleda.bsonlineshop.dto.common.ListRequest;
 import com.acleda.bsonlineshop.dto.common.PageResponse;
-import com.acleda.bsonlineshop.dto.common.Result;
+import com.acleda.bsonlineshop.dto.common.PageAbleResponse;
 import com.acleda.bsonlineshop.dto.product.ProductCreateRequest;
 import com.acleda.bsonlineshop.dto.product.ProductResponse;
 import com.acleda.bsonlineshop.service.ProductService;
@@ -11,6 +11,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 
+import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -36,7 +38,7 @@ public class ProductController {
 
     @Operation(summary = "List products (storefront)", description = "Public catalog search with filters (category, price), sort, and pagination. Does not require auth in production config.")
     @GetMapping
-    public ApiResponse<Result<Object>> list(  // ← change PageResponse<ProductResponse> to Result<Object>
+    public ApiResponse<PageAbleResponse<ProductResponse>> list(
                                               @RequestParam(required = false) String search,
                                               @RequestParam(required = false) String category,
                                               @RequestParam(required = false) String minPrice,
@@ -47,12 +49,47 @@ public class ProductController {
 
         ListRequest request = new ListRequest();
         request.setPageNumber(Math.max(page - 1, 0));
-        request.setSize(limit);
+        request.setSize(Math.min(Math.max(limit, 1), 48));
         request.setSearch(search);
-        request.setSortProperty("sold");
-        request.setSortDirection("DESC");
-        if (category != null) request.setFilters(Map.of("category", category));
+        applyCatalogSort(request, sort);
+        if (category != null && !category.isBlank()) {
+            Map<String, String> filters = new HashMap<>();
+            filters.put("category", category);
+            request.setFilters(filters);
+        }
+        if (minPrice != null && !minPrice.isBlank()) {
+            request.setMinPrice(new BigDecimal(minPrice));
+        }
+        if (maxPrice != null && !maxPrice.isBlank()) {
+            request.setMaxPrice(new BigDecimal(maxPrice));
+        }
         return ApiResponse.success(productService.listCatalog(request));
+    }
+
+    private static void applyCatalogSort(ListRequest request, String sort) {
+        String key = sort == null ? "featured" : sort.toLowerCase();
+        switch (key) {
+            case "price_asc" -> {
+                request.setSortProperty("price");
+                request.setSortDirection("ASC");
+            }
+            case "price_desc" -> {
+                request.setSortProperty("price");
+                request.setSortDirection("DESC");
+            }
+            case "rating" -> {
+                request.setSortProperty("rating");
+                request.setSortDirection("DESC");
+            }
+            case "newest" -> {
+                request.setSortProperty("createdAt");
+                request.setSortDirection("DESC");
+            }
+            default -> {
+                request.setSortProperty("sold");
+                request.setSortDirection("DESC");
+            }
+        }
     }
 
     @Operation(summary = "Get product by id", description = "Return a single product with images and details for the product page.")

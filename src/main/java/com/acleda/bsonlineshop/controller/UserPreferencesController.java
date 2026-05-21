@@ -1,6 +1,7 @@
 package com.acleda.bsonlineshop.controller;
 
 import com.acleda.bsonlineshop.dto.common.ApiResponse;
+import com.acleda.bsonlineshop.dto.user.UserPreferencesResponse;
 import com.acleda.bsonlineshop.entity.User;
 import com.acleda.bsonlineshop.entity.UserPreferences;
 import com.acleda.bsonlineshop.exception.ResourceNotFoundException;
@@ -27,20 +28,21 @@ public class UserPreferencesController {
 
     @Operation(summary = "Get preferences", description = "Return notification and UI preferences for the current user (creates defaults if missing).")
     @GetMapping
-    public ApiResponse<UserPreferences> get() {
-        return ApiResponse.success(getOrCreate());
+    public ApiResponse<UserPreferencesResponse> get() {
+        return ApiResponse.success(UserPreferencesResponse.from(getOrCreate()));
     }
 
     @Operation(summary = "Update preferences", description = "Update dark mode, email, order, promotion, and stock alert toggles.")
     @PatchMapping
-    public ApiResponse<UserPreferences> update(@RequestBody UserPreferences body) {
+    public ApiResponse<UserPreferencesResponse> update(@RequestBody UserPreferences body) {
         UserPreferences prefs = getOrCreate();
         prefs.setDarkMode(body.isDarkMode());
         prefs.setOrderUpdates(body.isOrderUpdates());
         prefs.setPromotions(body.isPromotions());
         prefs.setLowStockAlerts(body.isLowStockAlerts());
         prefs.setEmailNotifications(body.isEmailNotifications());
-        return ApiResponse.success("Preferences updated", preferencesRepository.save(prefs));
+        return ApiResponse.success(
+                "Preferences updated", UserPreferencesResponse.from(preferencesRepository.save(prefs)));
     }
 
     private UserPreferences getOrCreate() {

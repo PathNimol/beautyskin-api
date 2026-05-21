@@ -77,7 +77,9 @@ Activate **`prod`** with `-Dspring-boot.run.profiles=prod` or `SPRING_PROFILES_A
 - **OWNER / STAFF** + **ADMIN**: merchant backends (inventory, POS, promotions, suppliers, analytics summary, shop dashboard, order status changes, etc.). Shop-scoped handlers use `User.shopId`; **ADMIN** bypasses shop checks where supported.
 - **`AuthorizationExpressions` (`@authz`)** backs `@PreAuthorize("@authz...")` checks. This is the extension point for finer DB-backed permissions later.
 
-On first startup, demo data is seeded automatically.
+On first startup (empty database — **no users yet**), demo accounts, shops (**glowskin**, **kbeauty**), promotions, chat rooms, and catalog products are seeded once.
+
+**Catalog:** Showcase SKUs **`UI-SHOWCASE-001` … `UI-SHOWCASE-008`** mirror the Next.js home “Best Sellers”; extra browse rows use **`CAT-EXTRA-*`**. Catalog seed runs **only** with that initial demo seed, not on subsequent startups.
 
 ### Demo accounts (match UI)
 
@@ -104,6 +106,8 @@ OTP codes are sent by email when **`SPRING_MAIL_HOST`** (and auth credentials) a
 
 - Swagger UI: [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
 - OpenAPI JSON: [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs)
+
+**Swagger bearer token:** Click **Authorize** → `bearerAuth` → paste the JWT from `POST /api/auth/login` (value only, no `Bearer ` prefix). With `springdoc.swagger-ui.persist-authorization=true`, the token is kept in the browser after refresh until you clear site data or click **Logout** in Authorize.
 
 ## Response format
 

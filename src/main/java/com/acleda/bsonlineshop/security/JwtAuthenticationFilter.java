@@ -1,5 +1,6 @@
 package com.acleda.bsonlineshop.security;
 
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -47,6 +48,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         } catch (UsernameNotFoundException ignored) {
             // Invalid or deleted user — leave context unauthenticated
+        } catch (JwtException ignored) {
+            // Expired, malformed, or invalid signature — treat as no auth (re-login in Swagger/UI)
         }
         filterChain.doFilter(request, response);
     }
