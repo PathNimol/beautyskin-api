@@ -72,4 +72,21 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
     long countDistinctCustomers(
             @Param("shopId") UUID shopId, @Param("from") Instant from, @Param("to") Instant to);
 
+    @Query("""
+            SELECT COUNT(o) FROM Order o WHERE o.deleted = false
+            AND o.status = com.acleda.bsonlineshop.enums.OrderStatus.DELIVERED
+            AND (:shopId IS NULL OR o.shop.id = :shopId)
+            AND o.createdAt >= :from AND o.createdAt < :to
+            """)
+    long countDeliveredInRange(
+            @Param("shopId") UUID shopId, @Param("from") Instant from, @Param("to") Instant to);
+
+    @Query("""
+            SELECT COUNT(o) FROM Order o WHERE o.deleted = false
+            AND o.status = com.acleda.bsonlineshop.enums.OrderStatus.CANCELLED
+            AND (:shopId IS NULL OR o.shop.id = :shopId)
+            AND o.createdAt >= :from AND o.createdAt < :to
+            """)
+    long countCancelledInRange(
+            @Param("shopId") UUID shopId, @Param("from") Instant from, @Param("to") Instant to);
 }

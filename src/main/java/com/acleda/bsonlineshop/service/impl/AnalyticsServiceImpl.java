@@ -1,13 +1,19 @@
 package com.acleda.bsonlineshop.service.impl;
 
+import com.acleda.bsonlineshop.entity.ShopStaff;
 import com.acleda.bsonlineshop.enums.OrderStatus;
+import com.acleda.bsonlineshop.enums.UserRole;
 import com.acleda.bsonlineshop.repository.OrderRepository;
+import com.acleda.bsonlineshop.repository.ShopStaffRepository;
 import com.acleda.bsonlineshop.security.SecurityUtils;
 import com.acleda.bsonlineshop.service.AnalyticsService;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class AnalyticsServiceImpl implements AnalyticsService {
 
     private final OrderRepository orderRepository;
+    private final ShopStaffRepository shopStaffRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -49,7 +56,25 @@ public class AnalyticsServiceImpl implements AnalyticsService {
         data.put("deliveredOrders", delivered);
         data.put("revenue", revenue);
         data.put("customers", customers);
+
+        if (SecurityUtils.currentRole() == UserRole.ADMIN && shopId == null) {
+            data.put("staffActivity", buildStaffActivity());
+        }
         return data;
+    }
+
+    private List<Map<String, Object>> buildStaffActivity() {
+        List<Map<String, Object>> rows = new ArrayList<>();
+        for (ShopStaff staff : shopStaffRepository.findRecentPlatform(PageRequest.of(0, 25)).getContent()) {
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("name", staff.getName());
+            row.put("role", staff.getRole() != null ? staff.getRole().name() : "");
+            row.put("shop", staff.getShop() != null ? staff.getShop().getName() : "");
+            row.put("status", staff.getStatus() != null ? staff.getStatus().name() : "");
+            row.put("createdAt", staff.getCreatedAt());
+            rows.add(row);
+        }
+        return rows;
     }
 
     private static long parseDays(String range) {

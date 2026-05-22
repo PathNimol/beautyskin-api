@@ -14,6 +14,7 @@ import com.acleda.bsonlineshop.mapper.InventoryMapper;
 import com.acleda.bsonlineshop.repository.InventoryItemRepository;
 import com.acleda.bsonlineshop.repository.ProductRepository;
 import com.acleda.bsonlineshop.repository.ShopRepository;
+import com.acleda.bsonlineshop.enums.UserRole;
 import com.acleda.bsonlineshop.security.SecurityUtils;
 import com.acleda.bsonlineshop.service.InventoryService;
 import com.acleda.bsonlineshop.service.StockEventHelper;
@@ -37,9 +38,14 @@ public class InventoryServiceImpl implements InventoryService {
     @Override
     @Transactional(readOnly = true)
     public PageResponse<InventoryItemResponse> list(UUID shopId, String status, String search, int page, int limit) {
-        UUID scoped = SecurityUtils.requireShopId(shopId);
         InventoryStatus invStatus = parseStatus(status);
-        var result = inventoryRepository.search(scoped, invStatus, search, PageRequest.of(Math.max(page - 1, 0), limit));
+        PageRequest pageable = PageRequest.of(Math.max(page - 1, 0), limit);
+        if (SecurityUtils.currentRole() == UserRole.ADMIN && shopId == null) {
+            var result = inventoryRepository.searchPlatform(null, invStatus, search, pageable);
+            return PageResponse.from(result.map(inventoryMapper::toResponse));
+        }
+        UUID scoped = SecurityUtils.requireShopId(shopId);
+        var result = inventoryRepository.search(scoped, invStatus, search, pageable);
         return PageResponse.from(result.map(inventoryMapper::toResponse));
     }
 

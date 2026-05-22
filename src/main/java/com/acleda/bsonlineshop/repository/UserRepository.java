@@ -31,4 +31,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
         }
         return searchCustomersWithTerm(role, search.trim(), pageable);
     }
+
+    @Query("SELECT COUNT(u) FROM User u WHERE u.deleted = false AND u.role = :role")
+    long countByRoleAndDeletedFalse(@Param("role") UserRole role);
 }

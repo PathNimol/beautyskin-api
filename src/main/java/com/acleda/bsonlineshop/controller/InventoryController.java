@@ -31,15 +31,30 @@ public class InventoryController {
 
     private final InventoryService inventoryService;
 
-    @Operation(summary = "List inventory", description = "Paginated inventory lines for a shop with optional status and search.")
+    @Operation(
+            summary = "List inventory",
+            description = "Paginated inventory. Merchants must pass shopId; ADMIN may omit shopId for platform-wide list.")
     @GetMapping
     public ApiResponse<PageResponse<InventoryItemResponse>> list(
-            @RequestParam UUID shopId,
+            @RequestParam(required = false) UUID shopId,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String search,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int limit) {
         return ApiResponse.success(inventoryService.list(shopId, status, search, page, limit));
+    }
+
+    @Operation(
+            summary = "List platform inventory (admin)",
+            description = "Paginated inventory across all shops. ADMIN only; shopId is not required.")
+    @GetMapping("/platform")
+    @PreAuthorize("@authz.admin()")
+    public ApiResponse<PageResponse<InventoryItemResponse>> listPlatform(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String search,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int limit) {
+        return ApiResponse.success(inventoryService.list(null, status, search, page, limit));
     }
 
     @Operation(summary = "Create inventory item", description = "Manually add an inventory row for a shop.")

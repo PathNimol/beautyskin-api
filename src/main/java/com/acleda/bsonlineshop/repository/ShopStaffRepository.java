@@ -44,4 +44,10 @@ public interface ShopStaffRepository extends JpaRepository<ShopStaff, UUID> {
         }
         return searchWithTerm(shopId, role, status, search.trim(), pageable);
     }
+
+    @Query("""
+            SELECT s FROM ShopStaff s WHERE s.deleted = false
+            ORDER BY s.createdAt DESC
+            """)
+    Page<ShopStaff> findRecentPlatform(Pageable pageable);
 }
