@@ -2,6 +2,7 @@ package com.acleda.bsonlineshop.service;
 
 import com.acleda.bsonlineshop.dto.common.PageResponse;
 import com.acleda.bsonlineshop.dto.notification.NotificationResponse;
+import com.acleda.bsonlineshop.enums.NotificationType;
 import java.util.UUID;
 
 public interface NotificationService {
@@ -15,4 +16,8 @@ public interface NotificationService {
     void notifyAdmins(String title, String message);
 
     void notifyUser(UUID userId, String title, String message);
+
+    void notifyAdmins(String title, String message, NotificationType type, String link, UUID shopId);
+
+    void notifyUser(UUID userId, String title, String message, NotificationType type, String link, UUID shopId);
 }

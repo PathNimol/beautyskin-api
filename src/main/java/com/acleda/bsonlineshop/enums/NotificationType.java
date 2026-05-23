@@ -7,5 +7,6 @@ public enum NotificationType {
     PROMOTION,
     REVIEW,
     SYSTEM,
-    SHOP_APPROVAL
+    SHOP_APPROVAL,
+    SHOP_NAME_CHANGE
 }

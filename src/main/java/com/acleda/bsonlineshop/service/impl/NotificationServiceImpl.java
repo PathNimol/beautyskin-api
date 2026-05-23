@@ -13,7 +13,6 @@ import com.acleda.bsonlineshop.repository.UserRepository;
 import com.acleda.bsonlineshop.security.SecurityUtils;
 import com.acleda.bsonlineshop.service.NotificationService;
 import com.acleda.bsonlineshop.service.NotificationStreamHub;
-
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -39,18 +38,37 @@ public class NotificationServiceImpl implements NotificationService {
                 .findByUserAndDeletedFalseOrderByCreatedAtDesc(user, PageRequest.of(Math.max(page - 1, 0), limit))
                 .map(notificationMapper::toResponse));
     }
+
+    @Override
+    public void notifyAdmins(String title, String message) {
+        notifyAdmins(title, message, NotificationType.SHOP_APPROVAL, null, null);
+    }
+
     @Override
     public void notifyUser(UUID userId, String title, String message) {
+        notifyUser(userId, title, message, NotificationType.SHOP_APPROVAL, null, null);
+    }
+
+    @Override
+    public void notifyAdmins(String title, String message, NotificationType type, String link, UUID shopId) {
+        List<User> admins = userRepository.findByRole(UserRole.ADMIN);
+        List<AppNotification> notifications = admins.stream()
+                .map(admin -> buildNotification(admin, title, message, type, link, shopId))
+                .toList();
+        List<AppNotification> saved = notificationRepository.saveAll(notifications);
+        for (AppNotification n : saved) {
+            if (n.getUser() != null) {
+                notificationStreamHub.publish(n.getUser().getId(), notificationMapper.toResponse(n));
+            }
+        }
+    }
+
+    @Override
+    public void notifyUser(UUID userId, String title, String message, NotificationType type, String link, UUID shopId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        AppNotification n = new AppNotification();
-        n.setUser(user);
-        n.setTitle(title);
-        n.setMessage(message);
-        n.setRead(false);
-        n.setCreatedAt(Instant.now());
-        n.setType(NotificationType.SHOP_APPROVAL);
-        AppNotification saved = notificationRepository.save(n);
+        AppNotification saved = notificationRepository.save(
+                buildNotification(user, title, message, type, link, shopId));
         notificationStreamHub.publish(userId, notificationMapper.toResponse(saved));
     }
 
@@ -87,26 +105,17 @@ public class NotificationServiceImpl implements NotificationService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
 
-    @Override
-    public void notifyAdmins(String title, String message) {
-        List<User> admins = userRepository.findByRole(UserRole.ADMIN);
-        List<AppNotification> notifications = admins.stream()
-                .map(admin -> {
-                    AppNotification n = new AppNotification();
-                    n.setUser(admin);
-                    n.setTitle(title);
-                    n.setMessage(message);
-                    n.setRead(false);
-                    n.setCreatedAt(Instant.now());
-                    n.setType(NotificationType.SHOP_APPROVAL);
-                    return n;
-                })
-                .toList();
-        List<AppNotification> saved = notificationRepository.saveAll(notifications);
-        for (AppNotification n : saved) {
-            if (n.getUser() != null) {
-                notificationStreamHub.publish(n.getUser().getId(), notificationMapper.toResponse(n));
-            }
-        }
+    private static AppNotification buildNotification(
+            User user, String title, String message, NotificationType type, String link, UUID shopId) {
+        AppNotification n = new AppNotification();
+        n.setUser(user);
+        n.setTitle(title);
+        n.setMessage(message);
+        n.setRead(false);
+        n.setCreatedAt(Instant.now());
+        n.setType(type != null ? type : NotificationType.SYSTEM);
+        n.setLink(link);
+        n.setShopId(shopId);
+        return n;
     }
 }

@@ -4,6 +4,7 @@ import com.acleda.bsonlineshop.dto.common.PageResponse;
 import com.acleda.bsonlineshop.dto.shop.ShopCreateRequest;
 import com.acleda.bsonlineshop.dto.shop.ShopResponse;
 import com.acleda.bsonlineshop.entity.Shop;
+import com.acleda.bsonlineshop.enums.NotificationType;
 import com.acleda.bsonlineshop.enums.ShopPlan;
 import com.acleda.bsonlineshop.enums.ShopStatus;
 import com.acleda.bsonlineshop.enums.UserRole;
@@ -76,8 +77,10 @@ public class ShopServiceImpl implements ShopService {
         if (saved.getStatus() == ShopStatus.PENDING) {
             notificationService.notifyAdmins(
                     "New shop approval request",
-                    saved.getOwnerName() + " registered \"" + saved.getName() + "\" and is awaiting approval."
-            );
+                    saved.getOwnerName() + " registered \"" + saved.getName() + "\" and is awaiting approval.",
+                    NotificationType.SHOP_APPROVAL,
+                    "/admin/shops?pending=1",
+                    saved.getId());
         }
 
         return toResponse(saved);
@@ -97,14 +100,18 @@ public class ShopServiceImpl implements ShopService {
             notificationService.notifyUser(
                     saved.getOwnerId(),
                     "🎉 Shop Approved!",
-                    "Your shop \"" + saved.getName() + "\" has been approved and is now live."
-            );
+                    "Your shop \"" + saved.getName() + "\" has been approved and is now live.",
+                    NotificationType.SHOP_APPROVAL,
+                    "/owner/shops",
+                    saved.getId());
         } else if (status == ShopStatus.SUSPENDED) {
             notificationService.notifyUser(
                     saved.getOwnerId(),
                     "Shop Registration Rejected",
-                    "Your shop \"" + saved.getName() + "\" was not approved. Please contact support for more information."
-            );
+                    "Your shop \"" + saved.getName() + "\" was not approved. Please contact support for more information.",
+                    NotificationType.SHOP_APPROVAL,
+                    "/owner/shops",
+                    saved.getId());
         }
 
         return toResponse(saved);
