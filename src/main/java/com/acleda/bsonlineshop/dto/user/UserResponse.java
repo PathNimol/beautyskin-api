@@ -1,6 +1,7 @@
 package com.acleda.bsonlineshop.dto.user;
 
 import com.acleda.bsonlineshop.dto.common.ShippingAddressDto;
+import com.acleda.bsonlineshop.enums.AccountStatus;
 import com.acleda.bsonlineshop.enums.UserRole;
 import java.time.Instant;
 import java.util.UUID;
@@ -16,6 +17,7 @@ public class UserResponse {
     private String lastName;
     private String fullName;
     private UserRole role;
+    private AccountStatus status;
     private UUID shopId;
     private String avatar;
     private String avatarAlt;

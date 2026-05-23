@@ -8,5 +8,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface AppNotificationRepository extends JpaRepository<AppNotification, UUID> {
+    java.util.Optional<AppNotification> findByIdAndDeletedFalse(UUID id);
+
+    java.util.List<AppNotification> findByUserAndReadFalseAndDeletedFalse(com.acleda.bsonlineshop.entity.User user);
     Page<AppNotification> findByUserAndDeletedFalseOrderByCreatedAtDesc(User user, Pageable pageable);
 }

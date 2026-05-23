@@ -8,6 +8,7 @@ import com.acleda.bsonlineshop.entity.CartItem;
 import com.acleda.bsonlineshop.entity.Product;
 import com.acleda.bsonlineshop.entity.Promotion;
 import com.acleda.bsonlineshop.entity.User;
+import com.acleda.bsonlineshop.enums.ProductStatus;
 import com.acleda.bsonlineshop.enums.PromotionStatus;
 import com.acleda.bsonlineshop.enums.PromotionType;
 import com.acleda.bsonlineshop.exception.BusinessException;
@@ -20,6 +21,7 @@ import com.acleda.bsonlineshop.security.SecurityUtils;
 import com.acleda.bsonlineshop.service.CartService;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -52,8 +54,11 @@ public class CartServiceImpl implements CartService {
                 .findFirst()
                 .orElse(null);
         if (existing != null) {
-            existing.setQuantity(existing.getQuantity() + request.getQuantity());
+            int desiredQty = existing.getQuantity() + request.getQuantity();
+            validateProductForCart(product, desiredQty);
+            existing.setQuantity(desiredQty);
         } else {
+            validateProductForCart(product, request.getQuantity());
             CartItem item = new CartItem();
             item.setCart(cart);
             item.setProductId(product.getId());
@@ -81,6 +86,10 @@ public class CartServiceImpl implements CartService {
         if (quantity <= 0) {
             cart.getItems().remove(item);
         } else {
+            Product product = productRepository
+                    .findByIdAndDeletedFalse(item.getProductId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+            validateProductForCart(product, quantity);
             item.setQuantity(quantity);
         }
         return toResponse(cartRepository.save(cart));
@@ -112,8 +121,45 @@ public class CartServiceImpl implements CartService {
         if (promo.getStatus() != PromotionStatus.ACTIVE) {
             throw new BusinessException("Promotion is not active");
         }
+        LocalDate today = LocalDate.now();
+        if (promo.getStartDate() != null && today.isBefore(promo.getStartDate())) {
+            throw new BusinessException("Promotion has not started yet");
+        }
+        if (promo.getEndDate() != null && today.isAfter(promo.getEndDate())) {
+            throw new BusinessException("Promotion has expired");
+        }
+        if (promo.getMaxUses() > 0 && promo.getUsedCount() >= promo.getMaxUses()) {
+            throw new BusinessException("Promotion usage limit reached");
+        }
         cart.setAppliedPromoCode(code);
         return toResponse(cartRepository.save(cart));
+    }
+
+    @Override
+    @Transactional
+    public CartResponse removePromo() {
+        Cart cart = getOrCreateCart();
+        cart.setAppliedPromoCode(null);
+        return toResponse(cartRepository.save(cart));
+    }
+
+    private void validateProductForCart(Product product, int desiredQuantity) {
+        if (desiredQuantity <= 0) {
+            throw new BusinessException("Quantity must be positive");
+        }
+        if (product.getStatus() != ProductStatus.ACTIVE) {
+            throw new BusinessException("Product is not available for purchase");
+        }
+        if (!product.isVisible() || product.isRevoked()) {
+            throw new BusinessException("Product is not available for purchase");
+        }
+        if (product.getExpiryDate() != null && product.getExpiryDate().isBefore(LocalDate.now())) {
+            throw new BusinessException("Product has expired");
+        }
+        if (product.getStock() < desiredQuantity) {
+            throw new BusinessException(
+                    "Not enough stock for " + product.getName() + " (available: " + product.getStock() + ")");
+        }
     }
 
     private Cart getOrCreateCart() {
@@ -168,6 +214,9 @@ public class CartServiceImpl implements CartService {
                     }
                     if (p.getType() == PromotionType.FIXED) {
                         return p.getValue().min(subtotal);
+                    }
+                    if (p.getType() == PromotionType.FREE_SHIPPING) {
+                        return BigDecimal.ZERO;
                     }
                     return BigDecimal.ZERO;
                 })

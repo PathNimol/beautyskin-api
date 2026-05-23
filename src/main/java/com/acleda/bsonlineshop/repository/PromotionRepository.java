@@ -17,12 +17,28 @@ public interface PromotionRepository extends JpaRepository<Promotion, UUID> {
             SELECT p FROM Promotion p WHERE p.deleted = false
             AND (:shopId IS NULL OR p.shop.id = :shopId)
             AND (:status IS NULL OR p.status = :status)
-            AND (:search IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%'))
+            """)
+    Page<Promotion> list(
+            @Param("shopId") UUID shopId, @Param("status") PromotionStatus status, Pageable pageable);
+
+    @Query("""
+            SELECT p FROM Promotion p WHERE p.deleted = false
+            AND (:shopId IS NULL OR p.shop.id = :shopId)
+            AND (:status IS NULL OR p.status = :status)
+            AND (LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%'))
                  OR LOWER(p.code) LIKE LOWER(CONCAT('%', :search, '%')))
             """)
-    Page<Promotion> search(
+    Page<Promotion> searchWithTerm(
             @Param("shopId") UUID shopId,
             @Param("status") PromotionStatus status,
             @Param("search") String search,
             Pageable pageable);
+
+    default Page<Promotion> search(
+            UUID shopId, PromotionStatus status, String search, Pageable pageable) {
+        if (search == null || search.isBlank()) {
+            return list(shopId, status, pageable);
+        }
+        return searchWithTerm(shopId, status, search.trim(), pageable);
+    }
 }

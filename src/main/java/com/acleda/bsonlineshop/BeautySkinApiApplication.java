@@ -20,7 +20,8 @@ import org.springframework.scheduling.annotation.EnableAsync;
                 version = "v1",
                 description = "Beauty Skin online shop — monolithic Spring Boot backend"
         ),
-        servers = @Server(url = "/api")  // ← change "/" to "/api"
+        // Must be "/" — REST paths already include /api from WebMvcConfig; /api here doubles the prefix in Swagger UI.
+        servers = @Server(url = "/")
 )
 @SecurityScheme(
         name = "bearerAuth",

@@ -1,0 +1,94 @@
+spring:
+  application:
+    name: beautyskin-api
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:beautyskin-db}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:151003}
+    driver-class-name: org.postgresql.Driver
+  # Flyway manages versioned SQL; Hibernate still aligns schema updates during this transition phase.
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    open-in-view: false
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 2MB
+      max-request-size: 2MB
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: pathnimol0425@gmail.com
+    password: kvwn xqaf nslf uqyt   # the 16-char app password
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            scope: openid, email, profile
+            redirect-uri: "http://localhost:8080/login/oauth2/code/google"
+server:
+  port: ${SERVER_PORT:8080}
+  address: 0.0.0.0
+
+# Swagger UI (no /api prefix): http://localhost:8080/swagger-ui/index.html
+# REST API routes still use /api via WebMvcConfig
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+    disable-swagger-default-url: true
+    # Keep Authorize token in browser localStorage after refresh / close tab
+    persist-authorization: true
+
+app:
+  auth:
+    registration:
+      require-delivered-email: false
+  cors:
+    allowed-origins: http://localhost:4028,http://127.0.0.1:4028,http://localhost:8080,http://10.10.20.129:4028
+  jwt:
+    secret: ${JWT_SECRET:bs-online-shop-jwt-secret-key-change-in-production-min-256-bits-long!!}
+    access-expiration-ms: ${JWT_ACCESS_MS:3600000}
+    refresh-expiration-ms: ${JWT_REFRESH_MS:604800000}
+  otp:
+    expiration-minutes: 5
+    demo-code: "123456"
+  mail:
+    from: pathnimol0425@gmail.com
+  oauth:
+    demo-stub-enabled: ${APP_OAUTH_DEMO_STUB_ENABLED:true}
+  oauth2:
+    frontend-redirect-url: ${FRONTEND_REDIRECT_URL:http://localhost:4028/oauth2/callback}
+  upload:
+    dir: ${UPLOAD_DIR:uploads}
+    base-url: ${BASE_URL:http://localhost:8080}

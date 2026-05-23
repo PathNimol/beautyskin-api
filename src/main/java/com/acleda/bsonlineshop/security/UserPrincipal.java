@@ -1,6 +1,7 @@
 package com.acleda.bsonlineshop.security;
 
 import com.acleda.bsonlineshop.entity.User;
+import com.acleda.bsonlineshop.enums.AccountStatus;
 import com.acleda.bsonlineshop.enums.UserRole;
 import java.util.Collection;
 import java.util.List;
@@ -18,6 +19,7 @@ public class UserPrincipal implements UserDetails {
     private final String password;
     private final UserRole role;
     private final UUID shopId;
+    private final AccountStatus status;
 
     public UserPrincipal(User user) {
         this.id = user.getId();
@@ -25,6 +27,7 @@ public class UserPrincipal implements UserDetails {
         this.password = user.getPasswordHash();
         this.role = user.getRole();
         this.shopId = user.getShopId();
+        this.status = user.getStatus();
     }
 
     @Override
@@ -48,7 +51,7 @@ public class UserPrincipal implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        return status != AccountStatus.SUSPENDED;
     }
 
     @Override
@@ -58,6 +61,6 @@ public class UserPrincipal implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return status == AccountStatus.ACTIVE;
     }
 }

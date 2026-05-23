@@ -11,4 +11,6 @@ public interface CartService {
     CartResponse removeItem(UUID itemId);
     CartResponse clear();
     CartResponse applyPromo(String code);
+
+    CartResponse removePromo();
 }
