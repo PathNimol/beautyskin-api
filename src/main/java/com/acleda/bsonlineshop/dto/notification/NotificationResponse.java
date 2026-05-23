@@ -2,6 +2,8 @@ package com.acleda.bsonlineshop.dto.notification;
 
 import java.time.Instant;
 import java.util.UUID;
+
+import com.acleda.bsonlineshop.enums.NotificationType;
 import lombok.Builder;
 import lombok.Data;
 
@@ -10,7 +12,7 @@ import lombok.Data;
 public class NotificationResponse {
     private UUID id;
     private UUID shopId;
-    private String type;
+    private NotificationType type;
     private String title;
     private String message;
     private boolean read;

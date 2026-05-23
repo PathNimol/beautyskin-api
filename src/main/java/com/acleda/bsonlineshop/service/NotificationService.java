@@ -12,4 +12,7 @@ public interface NotificationService {
     void markAllRead();
 
     void delete(UUID id);
+    void notifyAdmins(String title, String message);
+
+    void notifyUser(UUID userId, String title, String message);
 }

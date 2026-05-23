@@ -45,14 +45,14 @@ public class CatalogSqlSeedRunner implements ApplicationRunner {
             for (String script : SIMPLE_SCRIPTS) {
                 ScriptUtils.executeSqlScript(connection, new ClassPathResource(script));
             }
-            executeWholeScript(connection, PLPGSQL_SCRIPT);
+            executeWholeScript(connection);
         }
         log.info("Catalog SQL seed finished.");
     }
 
-    private void executeWholeScript(Connection connection, String classpathScript)
+    private void executeWholeScript(Connection connection)
             throws IOException, SQLException {
-        ClassPathResource resource = new ClassPathResource(classpathScript);
+        ClassPathResource resource = new ClassPathResource(CatalogSqlSeedRunner.PLPGSQL_SCRIPT);
         String sql = StreamUtils.copyToString(resource.getInputStream(), StandardCharsets.UTF_8);
         try (Statement statement = connection.createStatement()) {
             statement.execute(sql);

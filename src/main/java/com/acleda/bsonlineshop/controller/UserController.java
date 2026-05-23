@@ -4,16 +4,15 @@ import com.acleda.bsonlineshop.dto.common.ApiResponse;
 import com.acleda.bsonlineshop.dto.common.ShippingAddressDto;
 import com.acleda.bsonlineshop.dto.user.UpdateProfileRequest;
 import com.acleda.bsonlineshop.dto.user.UserResponse;
+import com.acleda.bsonlineshop.enums.UserRole;
 import com.acleda.bsonlineshop.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/users")
@@ -45,5 +44,11 @@ public class UserController {
     @PatchMapping("/me/shipping")
     public ApiResponse<ShippingAddressDto> updateShipping(@RequestBody ShippingAddressDto dto) {
         return ApiResponse.success("Shipping updated", userService.updateShipping(dto));
+    }
+
+    @Operation(summary = "Get users by role", description = "Return all users with the given role. Admin only.")
+    @GetMapping("/by-role/{role}")
+    public ApiResponse<List<UserResponse>> getUsersByRole(@PathVariable UserRole role) {
+        return ApiResponse.success(userService.getUsersByRole(role));
     }
 }

@@ -3,8 +3,8 @@ package com.acleda.bsonlineshop.service.impl;
 import com.acleda.bsonlineshop.dto.common.ShippingAddressDto;
 import com.acleda.bsonlineshop.dto.user.UpdateProfileRequest;
 import com.acleda.bsonlineshop.dto.user.UserResponse;
-import com.acleda.bsonlineshop.entity.ShippingAddress;
 import com.acleda.bsonlineshop.entity.User;
+import com.acleda.bsonlineshop.enums.UserRole;
 import com.acleda.bsonlineshop.exception.ResourceNotFoundException;
 import com.acleda.bsonlineshop.mapper.EntityMapper;
 import com.acleda.bsonlineshop.repository.UserRepository;
@@ -13,6 +13,9 @@ import com.acleda.bsonlineshop.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -57,6 +60,15 @@ public class UserServiceImpl implements UserService {
         user.setShipping(entityMapper.toShippingEntity(dto));
         userRepository.save(user);
         return entityMapper.toShippingDto(user.getShipping());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<UserResponse> getUsersByRole(UserRole role) {
+        return userRepository.findByRole(role)
+                .stream()
+                .map(entityMapper::toUserResponse)
+                .collect(Collectors.toList());
     }
 
     private User findCurrent() {

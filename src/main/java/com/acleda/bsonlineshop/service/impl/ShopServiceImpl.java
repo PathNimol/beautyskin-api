@@ -9,8 +9,13 @@ import com.acleda.bsonlineshop.enums.ShopStatus;
 import com.acleda.bsonlineshop.exception.ResourceNotFoundException;
 import com.acleda.bsonlineshop.repository.ShopRepository;
 import com.acleda.bsonlineshop.security.SecurityUtils;
+import com.acleda.bsonlineshop.service.NotificationService;
 import com.acleda.bsonlineshop.service.ShopService;
+
+import java.util.Objects;
 import java.util.UUID;
+
+import com.acleda.bsonlineshop.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -22,6 +27,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class ShopServiceImpl implements ShopService {
 
     private final ShopRepository shopRepository;
+    private final UserService userService;
+    private final NotificationService notificationService;
 
     @Override
     @Transactional(readOnly = true)
@@ -51,19 +58,56 @@ public class ShopServiceImpl implements ShopService {
         shop.setLogo(request.getLogo());
         shop.setLogoAlt(request.getLogoAlt());
         shop.setPlan(request.getPlan() != null ? request.getPlan() : ShopPlan.STARTER);
-        shop.setStatus(ShopStatus.PENDING);
+
+        // Admin-created → active immediately; owner-created → pending for approval
+        String currentUserRole = userService.getCurrentUser().getRole().toString();
+        if(Objects.equals(currentUserRole, "ROLE_ADMIN")){
+            shop.setStatus(ShopStatus.ACTIVE);
+        }else{
+            shop.setStatus(ShopStatus.PENDING);
+        }
+
         shop.setOwnerId(SecurityUtils.currentUserId());
         shop.setOwnerName(request.getOwnerName() != null ? request.getOwnerName() : SecurityUtils.currentUser().getUsername());
-        return toResponse(shopRepository.save(shop));
+
+        Shop saved = shopRepository.save(shop);
+
+        // Notify admins when an owner registers a new shop
+        if (saved.getStatus() == ShopStatus.PENDING) {
+            notificationService.notifyAdmins(
+                    "New shop approval request",
+                    saved.getOwnerName() + " registered \"" + saved.getName() + "\" and is awaiting approval."
+            );
+        }
+
+        return toResponse(saved);
     }
 
     @Override
     @Transactional
     public ShopResponse updateStatus(UUID id, ShopStatus status) {
-        Shop shop = shopRepository.findByIdAndDeletedFalse(id)
+        Shop shop = shopRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Shop not found"));
+
         shop.setStatus(status);
-        return toResponse(shopRepository.save(shop));
+        Shop saved = shopRepository.save(shop);
+
+        // Notify owner when admin approves or rejects
+        if (status == ShopStatus.ACTIVE) {
+            notificationService.notifyUser(
+                    saved.getOwnerId(),
+                    "🎉 Shop Approved!",
+                    "Your shop \"" + saved.getName() + "\" has been approved and is now live."
+            );
+        } else if (status == ShopStatus.SUSPENDED) {
+            notificationService.notifyUser(
+                    saved.getOwnerId(),
+                    "Shop Registration Rejected",
+                    "Your shop \"" + saved.getName() + "\" was not approved. Please contact support for more information."
+            );
+        }
+
+        return toResponse(saved);
     }
 
     private ShopResponse toResponse(Shop s) {
