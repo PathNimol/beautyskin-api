@@ -20,4 +20,7 @@ public interface NotificationService {
     void notifyAdmins(String title, String message, NotificationType type, String link, UUID shopId);
 
     void notifyUser(UUID userId, String title, String message, NotificationType type, String link, UUID shopId);
+
+    /** Notify the shop owner record and any OWNER users assigned to the shop. */
+    void notifyShopOwners(UUID shopId, String title, String message, NotificationType type, String link);
 }

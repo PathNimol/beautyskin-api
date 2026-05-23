@@ -2,6 +2,7 @@ package com.acleda.bsonlineshop.controller;
 
 import com.acleda.bsonlineshop.dto.common.ApiResponse;
 import com.acleda.bsonlineshop.dto.user.UserPreferencesResponse;
+import com.acleda.bsonlineshop.dto.user.UserPreferencesUpdateRequest;
 import com.acleda.bsonlineshop.entity.User;
 import com.acleda.bsonlineshop.entity.UserPreferences;
 import com.acleda.bsonlineshop.exception.ResourceNotFoundException;
@@ -34,13 +35,29 @@ public class UserPreferencesController {
 
     @Operation(summary = "Update preferences", description = "Update dark mode, email, order, promotion, and stock alert toggles.")
     @PatchMapping
-    public ApiResponse<UserPreferencesResponse> update(@RequestBody UserPreferences body) {
+    public ApiResponse<UserPreferencesResponse> update(@RequestBody UserPreferencesUpdateRequest body) {
         UserPreferences prefs = getOrCreate();
-        prefs.setDarkMode(body.isDarkMode());
-        prefs.setOrderUpdates(body.isOrderUpdates());
-        prefs.setPromotions(body.isPromotions());
-        prefs.setLowStockAlerts(body.isLowStockAlerts());
-        prefs.setEmailNotifications(body.isEmailNotifications());
+        if (body.getDarkMode() != null) {
+            prefs.setDarkMode(body.getDarkMode());
+        }
+        if (body.getOrderUpdates() != null) {
+            prefs.setOrderUpdates(body.getOrderUpdates());
+        }
+        if (body.getPromotions() != null) {
+            prefs.setPromotions(body.getPromotions());
+        }
+        if (body.getLowStockAlerts() != null) {
+            prefs.setLowStockAlerts(body.getLowStockAlerts());
+        }
+        if (body.getExpiryAlerts() != null) {
+            prefs.setExpiryAlerts(body.getExpiryAlerts());
+        }
+        if (body.getReviewAlerts() != null) {
+            prefs.setReviewAlerts(body.getReviewAlerts());
+        }
+        if (body.getEmailNotifications() != null) {
+            prefs.setEmailNotifications(body.getEmailNotifications());
+        }
         return ApiResponse.success(
                 "Preferences updated", UserPreferencesResponse.from(preferencesRepository.save(prefs)));
     }
@@ -55,6 +72,8 @@ public class UserPreferencesController {
             p.setOrderUpdates(true);
             p.setPromotions(true);
             p.setLowStockAlerts(true);
+            p.setExpiryAlerts(true);
+            p.setReviewAlerts(true);
             p.setEmailNotifications(true);
             return preferencesRepository.save(p);
         });

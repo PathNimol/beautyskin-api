@@ -38,4 +38,6 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     long countByRoleAndDeletedFalse(@Param("role") UserRole role);
 
     List<User> findByRole(UserRole userRole);
+
+    List<User> findByShopIdAndRoleAndDeletedFalse(UUID shopId, UserRole role);
 }

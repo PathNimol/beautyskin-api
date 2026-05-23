@@ -43,6 +43,7 @@ public class DataSeeder implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
+        syncShopOwnerIds();
         if (userRepository.count() > 0) {
             log.debug("Skipping demo account seed — users already exist.");
             return;
@@ -175,5 +176,21 @@ public class DataSeeder implements CommandLineRunner {
         room.setRoomType(type);
         room.setAllowedRoles(roles);
         chatRoomRepository.save(room);
+    }
+
+    /** Keeps shops.owner_id aligned with OWNER users (fixes older DB rows). */
+    private void syncShopOwnerIds() {
+        for (Shop shop : shopRepository.findAll()) {
+            if (shop.isDeleted() || shop.getOwnerId() != null) {
+                continue;
+            }
+            userRepository.findByShopIdAndRoleAndDeletedFalse(shop.getId(), UserRole.OWNER).stream()
+                    .findFirst()
+                    .ifPresent(owner -> {
+                        shop.setOwnerId(owner.getId());
+                        shopRepository.save(shop);
+                        log.info("Synced ownerId for shop {}", shop.getSlug());
+                    });
+        }
     }
 }

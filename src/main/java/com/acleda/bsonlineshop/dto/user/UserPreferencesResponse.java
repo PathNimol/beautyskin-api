@@ -13,6 +13,8 @@ public class UserPreferencesResponse {
     private boolean orderUpdates;
     private boolean promotions;
     private boolean lowStockAlerts;
+    private boolean expiryAlerts;
+    private boolean reviewAlerts;
     private boolean emailNotifications;
 
     public static UserPreferencesResponse from(UserPreferences prefs) {
@@ -22,6 +24,8 @@ public class UserPreferencesResponse {
                 .orderUpdates(prefs.isOrderUpdates())
                 .promotions(prefs.isPromotions())
                 .lowStockAlerts(prefs.isLowStockAlerts())
+                .expiryAlerts(prefs.isExpiryAlerts())
+                .reviewAlerts(prefs.isReviewAlerts())
                 .emailNotifications(prefs.isEmailNotifications())
                 .build();
     }

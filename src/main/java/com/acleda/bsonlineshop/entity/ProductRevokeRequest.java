@@ -9,6 +9,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -39,4 +40,8 @@ public class ProductRevokeRequest extends BaseEntity {
 
     private String reviewNotes;
     private String reviewedBy;
+
+    private UUID requestedBy;
+    private String requesterEmail;
+    private String requesterName;
 }

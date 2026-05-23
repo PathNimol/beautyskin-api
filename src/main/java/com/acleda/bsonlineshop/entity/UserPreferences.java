@@ -22,5 +22,7 @@ public class UserPreferences extends BaseEntity {
     private boolean orderUpdates;
     private boolean promotions;
     private boolean lowStockAlerts;
+    private boolean expiryAlerts = true;
+    private boolean reviewAlerts = true;
     private boolean emailNotifications;
 }

@@ -20,6 +20,8 @@ public class RevokeRequestMapper {
                 .status(r.getStatus())
                 .reviewNotes(r.getReviewNotes())
                 .reviewedBy(r.getReviewedBy())
+                .requesterEmail(r.getRequesterEmail())
+                .requesterName(r.getRequesterName())
                 .createdAt(r.getCreatedAt())
                 .build();
     }

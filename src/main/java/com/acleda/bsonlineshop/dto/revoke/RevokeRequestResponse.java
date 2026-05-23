@@ -20,5 +20,7 @@ public class RevokeRequestResponse {
     private RevokeRequestStatus status;
     private String reviewNotes;
     private String reviewedBy;
+    private String requesterEmail;
+    private String requesterName;
     private Instant createdAt;
 }
