@@ -54,6 +54,8 @@ Environment variables (optional overrides):
 | `SPRING_MAIL_PASSWORD` | _unset_ | SMTP password (use an [App Password](https://support.google.com/accounts/answer/185833) for Gmail) |
 | `APP_MAIL_FROM` | _spring.mail.username_ | Visible From address (required if username is not an email) |
 | `APP_OAUTH_DEMO_STUB_ENABLED` | `true` | When `false`, `POST /api/auth/oauth/{provider}` is rejected (use real OAuth2 or browser flow). |
+| `GOOGLE_CLIENT_ID` | _required for Google sign-in_ | OAuth 2.0 client ID (set in `.env`, not in git) |
+| `GOOGLE_CLIENT_SECRET` | _required for Google sign-in_ | OAuth 2.0 client secret (set in `.env`, not in git) |
 | `SPRING_PROFILES_ACTIVE` | _unset_ | Set to `prod` for stricter registration + no demo OTP stub (see `application-prod.yml`). |
 
 Base URL: `http://localhost:8080/api`
@@ -62,8 +64,11 @@ Base URL: `http://localhost:8080/api`
 
 ```bash
 cd beautyskin-api
+cp .env.example .env     # then set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET
 ./gradlew bootRun        # Linux/macOS/Git Bash — use gradlew.bat on cmd.exe
 ```
+
+Running **BeautySkinApiApplication** (IntelliJ, VS Code, or `./gradlew bootRun`) loads `.env` from the project root automatically when present.
 
 Activate **`prod`** with `-Dspring-boot.run.profiles=prod` or `SPRING_PROFILES_ACTIVE=prod`.
 

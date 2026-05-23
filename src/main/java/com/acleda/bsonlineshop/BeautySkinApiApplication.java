@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.annotations.servers.Server;
+import com.acleda.bsonlineshop.config.DotEnvLoader;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -33,6 +34,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 public class BeautySkinApiApplication {
 
     public static void main(String[] args) {
+        DotEnvLoader.loadIfPresent();
         SpringApplication.run(BeautySkinApiApplication.class, args);
         System.out.println("==============| APPLICATION RUN SUCCESSFULLY |===============");
     }
