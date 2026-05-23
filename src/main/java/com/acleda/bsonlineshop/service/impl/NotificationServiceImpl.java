@@ -12,6 +12,7 @@ import com.acleda.bsonlineshop.repository.AppNotificationRepository;
 import com.acleda.bsonlineshop.repository.UserRepository;
 import com.acleda.bsonlineshop.security.SecurityUtils;
 import com.acleda.bsonlineshop.service.NotificationService;
+import com.acleda.bsonlineshop.service.NotificationStreamHub;
 
 import java.time.Instant;
 import java.util.List;
@@ -28,6 +29,7 @@ public class NotificationServiceImpl implements NotificationService {
     private final AppNotificationRepository notificationRepository;
     private final UserRepository userRepository;
     private final NotificationMapper notificationMapper;
+    private final NotificationStreamHub notificationStreamHub;
 
     @Override
     @Transactional(readOnly = true)
@@ -47,7 +49,9 @@ public class NotificationServiceImpl implements NotificationService {
         n.setMessage(message);
         n.setRead(false);
         n.setCreatedAt(Instant.now());
-        notificationRepository.save(n);
+        n.setType(NotificationType.SHOP_APPROVAL);
+        AppNotification saved = notificationRepository.save(n);
+        notificationStreamHub.publish(userId, notificationMapper.toResponse(saved));
     }
 
     @Override
@@ -98,6 +102,11 @@ public class NotificationServiceImpl implements NotificationService {
                     return n;
                 })
                 .toList();
-        notificationRepository.saveAll(notifications);
+        List<AppNotification> saved = notificationRepository.saveAll(notifications);
+        for (AppNotification n : saved) {
+            if (n.getUser() != null) {
+                notificationStreamHub.publish(n.getUser().getId(), notificationMapper.toResponse(n));
+            }
+        }
     }
 }

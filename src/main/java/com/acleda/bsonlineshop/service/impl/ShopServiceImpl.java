@@ -6,13 +6,13 @@ import com.acleda.bsonlineshop.dto.shop.ShopResponse;
 import com.acleda.bsonlineshop.entity.Shop;
 import com.acleda.bsonlineshop.enums.ShopPlan;
 import com.acleda.bsonlineshop.enums.ShopStatus;
+import com.acleda.bsonlineshop.enums.UserRole;
 import com.acleda.bsonlineshop.exception.ResourceNotFoundException;
 import com.acleda.bsonlineshop.repository.ShopRepository;
 import com.acleda.bsonlineshop.security.SecurityUtils;
 import com.acleda.bsonlineshop.service.NotificationService;
 import com.acleda.bsonlineshop.service.ShopService;
 
-import java.util.Objects;
 import java.util.UUID;
 
 import com.acleda.bsonlineshop.service.UserService;
@@ -60,10 +60,10 @@ public class ShopServiceImpl implements ShopService {
         shop.setPlan(request.getPlan() != null ? request.getPlan() : ShopPlan.STARTER);
 
         // Admin-created → active immediately; owner-created → pending for approval
-        String currentUserRole = userService.getCurrentUser().getRole().toString();
-        if(Objects.equals(currentUserRole, "ROLE_ADMIN")){
+        UserRole currentUserRole = userService.getCurrentUser().getRole();
+        if (currentUserRole == UserRole.ADMIN) {
             shop.setStatus(ShopStatus.ACTIVE);
-        }else{
+        } else {
             shop.setStatus(ShopStatus.PENDING);
         }
 

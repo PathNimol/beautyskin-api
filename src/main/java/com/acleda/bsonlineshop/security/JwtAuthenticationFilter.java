@@ -27,12 +27,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull HttpServletRequest request,
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain) throws ServletException, IOException {
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        String jwt = resolveJwt(request);
+        if (jwt == null) {
             filterChain.doFilter(request, response);
             return;
         }
-        String jwt = authHeader.substring(7);
         try {
             String username = jwtService.extractUsername(jwt);
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
@@ -52,5 +51,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // Expired, malformed, or invalid signature — treat as no auth (re-login in Swagger/UI)
         }
         filterChain.doFilter(request, response);
+    }
+
+    /** Bearer header, or {@code access_token} / {@code token} query param (for EventSource SSE). */
+    private static String resolveJwt(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7);
+        }
+        String query = request.getParameter("access_token");
+        if (query == null || query.isBlank()) {
+            query = request.getParameter("token");
+        }
+        return query != null && !query.isBlank() ? query : null;
     }
 }

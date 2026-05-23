@@ -2,6 +2,8 @@ package com.acleda.bsonlineshop.repository;
 
 import com.acleda.bsonlineshop.entity.User;
 import com.acleda.bsonlineshop.enums.UserRole;
+
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
@@ -34,4 +36,6 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     @Query("SELECT COUNT(u) FROM User u WHERE u.deleted = false AND u.role = :role")
     long countByRoleAndDeletedFalse(@Param("role") UserRole role);
+
+    List<User> findByRole(UserRole userRole);
 }
